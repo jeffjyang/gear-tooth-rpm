@@ -1,9 +1,14 @@
-//test conflict comment 3
 #include "msp430g2553.h"
 
+#define CHECK_INTERVAL_MS 500;	// TODO verify this number 
+#define ACCEPTABLE_RPM_PERCENTAGE_DIFF 0.05;
 
-volatile int wheelToothCount = 0;   // TODO volatile n
-volatile int engineToothCount = 0;eeded?
+// TODO verify these numbers
+#define WHEEL_GEAR_SIZE 36;
+#define ENGINE_GEAR_SIZE 24;
+
+volatile int wheelToothCount = 0;   // TODO volatile needed??
+volatile int engineToothCount = 0;
 
 void main(void)
 {
@@ -32,12 +37,7 @@ void main(void)
     _BIS_SR(CPUOFF + GIE);          // Enter LPM0 w/ interrupt
     while(1)                          //Loop forever, we work with interrupts!
     {
-        //if (wheelToothCount == engineToothCount) {
-        //    P1OUT |= BIT6;
-        //} else {
-        //    P1OUT &= ~BIT6;
-        //}
-
+    	// wait for interrupts for control 
     }
 }
 
@@ -45,13 +45,41 @@ void main(void)
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void Timer_A (void)
 {
-    //TODO temp code for testing
 
+	// this is some temp code for testing 
+	/*
     if (wheelToothCount == engineToothCount) {
         P1OUT |= BIT6;
     } else {
         P1OUT &= ~BIT6;
     }
+	*/
+
+	// disable global interrupts while performing check
+	// TODO this might not be the right command
+	__disable_interrupt();
+
+
+	// check the speeds of the two gears. 
+	// units irrelavent since we only want relative speed 
+	double wheelSpeed = ( (double) wheelToothCount / WHEEL_GEAR_SIZE ) / CHECK_INTERVAL_MS;
+	double engineSpeed = ( (double) engineToothCount / ENGINE_GEAR_SIZE ) / CHECK_INTERVAL_MS;
+
+	// If engine RPM is within 5% of wheel RPM, set the output pin to HIGH
+	if (abs(wheelSpeed - engineSpeed) / ((wheelSpeed + engineSpeed) / 2) < ACCEPTABLE_RPM_PERCENTAGE_DIFF ) {
+		// TODO output pins
+        P1OUT |= BIT6;
+	} else {
+        P1OUT &= ~BIT6;
+	}
+
+	wheelToothCount = 0;
+	engineToothCount = 0;
+
+	// enable interrups 
+	// TODO verify command 
+	__enable_interrupt();
+
 
 }
 
@@ -71,10 +99,6 @@ __interrupt void Port_2(void)
     P2IFG &= ~BIT1;
 
 }
-
-// this is a comment 
-//comment 2
-
 
 
 
