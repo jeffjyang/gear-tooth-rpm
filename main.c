@@ -1,3 +1,4 @@
+//test conflict comment 3
 #include "msp430g2553.h"
 
 
