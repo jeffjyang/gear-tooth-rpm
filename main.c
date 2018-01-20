@@ -4,7 +4,7 @@
 #define ACCEPTABLE_RPM_PERCENTAGE_DIFF 0.05;
 
 // TODO verify these numbers
-#define WHEEL_GEAR_SIZE 36;
+#define WHEEL_GEAR_SIZE 24;
 #define ENGINE_GEAR_SIZE 24;
 
 volatile int wheelToothCount = 0;   // TODO volatile needed??
@@ -46,14 +46,8 @@ void main(void)
 __interrupt void Timer_A (void)
 {
 
-	// this is some temp code for testing 
-	/*
-    if (wheelToothCount == engineToothCount) {
-        P1OUT |= BIT6;
-    } else {
-        P1OUT &= ~BIT6;
-    }
-	*/
+ //   P1OUT |= BIT6;
+  //  P1OUT |= BIT6;
 
 	// disable global interrupts while performing check
 	// TODO this might not be the right command
@@ -62,14 +56,33 @@ __interrupt void Timer_A (void)
 
 	// check the speeds of the two gears. 
 	// units irrelavent since we only want relative speed 
-	double wheelSpeed = ( (double) wheelToothCount / WHEEL_GEAR_SIZE ) / CHECK_INTERVAL_MS;
-	double engineSpeed = ( (double) engineToothCount / ENGINE_GEAR_SIZE ) / CHECK_INTERVAL_MS;
+//	double wheelSpeed = ( wheelToothCount * 1.0 / WHEEL_GEAR_SIZE ) / CHECK_INTERVAL_MS;
+//	double engineSpeed = ( (double) engineToothCount / ENGINE_GEAR_SIZE ) / CHECK_INTERVAL_MS;
+
+	// this doesnt work for some reason
+	/*
+	double wheelSpeed = (wheelToothCount * 1.0) / WHEEL_GEAR_SIZE ;
+	wheelSpeed = wheelSpeed / CHECK_INTERVAL_MS;
+	double engineSpeed = engineToothCount * 1.0 / ENGINE_GEAR_SIZE;
+	engineSpeed = engineSpeed / CHECK_INTERVAL_MS;
+*/
+
+	double wheelSpeed = wheelToothCount;
+	double engineSpeed = engineToothCount;
 
 	// If engine RPM is within 5% of wheel RPM, set the output pin to HIGH
-	if (abs(wheelSpeed - engineSpeed) / ((wheelSpeed + engineSpeed) / 2) < ACCEPTABLE_RPM_PERCENTAGE_DIFF ) {
-		// TODO output pins
+	double rpmDiff = abs(wheelSpeed - engineSpeed) / ((wheelSpeed + engineSpeed) / 2);
+
+	//rpmDiff < ACCEPTABLE_RPM_PERCENTAGE_DIFF
+
+	double acceptDiff = ACCEPTABLE_RPM_PERCENTAGE_DIFF;
+
+	if (rpmDiff < acceptDiff) {
+	// TODO output pins
         P1OUT |= BIT6;
+        P1OUT &= ~BIT0;
 	} else {
+        P1OUT |= BIT0;
         P1OUT &= ~BIT6;
 	}
 
@@ -80,6 +93,8 @@ __interrupt void Timer_A (void)
 	// TODO verify command 
 	__enable_interrupt();
 
+//	P1OUT &= ~BIT0;
+//    P1OUT &= ~BIT6;
 
 }
 
