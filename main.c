@@ -5,7 +5,7 @@
 
 // TODO verify these numbers
 #define WHEEL_GEAR_SIZE 24;
-#define ENGINE_GEAR_SIZE 24;
+#define ENGINE_GEAR_SIZE 36;
 
 volatile int wheelToothCount = 0;   // TODO volatile needed??
 volatile int engineToothCount = 0;
@@ -16,7 +16,7 @@ void main(void)
     CCTL0 = CCIE;                             // CCR0 interrupt enabled
     TACTL = TASSEL_2 + MC_1 + ID_3;           // SMCLK/8, upmode
     //CCR0 =  10000;                     // 12.5 Hz
-    CCR0 = 65535;                     // idk how fast this is
+    CCR0 = 65535;                     // idk how fast this is // maybe every half second? 
     P1OUT &= 0x00;               // Shut down everything
     P1DIR &= 0x00;
     P1DIR |= BIT0 + BIT6;            // P1.0 and P1.6 pins output the rest are input
@@ -45,6 +45,7 @@ void main(void)
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void Timer_A (void)
 {
+    P1OUT |= BIT0;
 
  //   P1OUT |= BIT6;
   //  P1OUT |= BIT6;
@@ -66,9 +67,16 @@ __interrupt void Timer_A (void)
 	double engineSpeed = engineToothCount * 1.0 / ENGINE_GEAR_SIZE;
 	engineSpeed = engineSpeed / CHECK_INTERVAL_MS;
 */
-
+/*
 	double wheelSpeed = wheelToothCount;
 	double engineSpeed = engineToothCount;
+*/
+
+	double wheelSpeed = wheelToothCount * 10;
+	wheelSpeed = wheelSpeed / WHEEL_GEAR_SIZE;
+
+	double engineSpeed = engineToothCount * 10;
+	engineSpeed = engineSpeed / ENGINE_GEAR_SIZE;
 
 	// If engine RPM is within 5% of wheel RPM, set the output pin to HIGH
 	double rpmDiff = abs(wheelSpeed - engineSpeed) / ((wheelSpeed + engineSpeed) / 2);
@@ -80,11 +88,10 @@ __interrupt void Timer_A (void)
 	if (rpmDiff < acceptDiff) {
 	// TODO output pins
         P1OUT |= BIT6;
-        P1OUT &= ~BIT0;
 	} else {
-        P1OUT |= BIT0;
         P1OUT &= ~BIT6;
 	}
+    P1OUT &= ~BIT0;
 
 	wheelToothCount = 0;
 	engineToothCount = 0;
